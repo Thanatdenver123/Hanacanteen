@@ -11,27 +11,30 @@
         .header { max-width: 800px; margin: 0 auto 20px auto; text-align: center; }
         .header h2 { color: var(--primary-color); }
         .back-link { display: inline-block; margin-bottom: 20px; color: var(--text-main); text-decoration: none; background: #e5e7eb; padding: 8px 16px; border-radius: 8px;}
+        .back-link:hover { background: #d1d5db; }
         
-        #loading { text-align: center; margin-top: 50px; color: #6b7280; }
+        #loading { text-align: center; margin-top: 50px; color: #6b7280; font-size: 16px; }
         
         .grid-container { max-width: 800px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
         .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #fbbf24; }
-        .card.approved { border-left-color: var(--success-color); opacity: 0.8; }
+        .card.approved { border-left-color: var(--success-color); opacity: 0.85; }
         
-        .card-header { display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; }
-        .card-title { font-weight: 600; font-size: 18px; }
-        .card-date { color: #6b7280; font-size: 14px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 15px; }
+        .card-title { font-weight: 600; font-size: 18px; color: var(--primary-color); }
+        .card-time { color: #6b7280; font-size: 13px; background: #f3f4f6; padding: 4px 8px; border-radius: 4px; }
+        
         .info-row { margin-bottom: 8px; font-size: 15px; }
+        .info-label { font-weight: 500; color: #4b5563; display: inline-block; width: 160px; }
         
-        .photo-btn { display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #f3f4f6; color: var(--text-main); border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .photo-btn { display: inline-block; margin-top: 15px; padding: 8px 16px; background-color: #f3f4f6; color: var(--text-main); border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s; font-weight: 500; }
         .photo-btn:hover { background-color: #e5e7eb; }
         
-        .action-area { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e5e7eb; }
-        .action-area select { padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; font-family: 'Prompt'; margin-right: 10px; width: 60%; max-width: 200px;}
-        .approve-btn { padding: 10px 20px; background-color: var(--success-color); color: white; border: none; border-radius: 6px; font-family: 'Prompt'; cursor: pointer; transition: 0.2s; }
+        .action-area { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .action-area select { padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; font-family: 'Prompt'; flex-grow: 1; max-width: 250px; font-size: 14px; }
+        .approve-btn { padding: 10px 20px; background-color: var(--success-color); color: white; border: none; border-radius: 6px; font-family: 'Prompt'; cursor: pointer; transition: 0.2s; font-weight: 500; white-space: nowrap; }
         .approve-btn:hover { background-color: #059669; }
         
-        .approved-text { color: var(--success-color); font-weight: 600; display: flex; align-items: center; }
+        .approved-text { color: var(--success-color); font-weight: 600; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
@@ -61,7 +64,7 @@
             renderRecords(result.data);
             
         } catch (error) {
-            document.getElementById('loading').innerText = '❌ ไม่สามารถโหลดข้อมูลได้';
+            document.getElementById('loading').innerText = '❌ ไม่สามารถโหลดข้อมูลได้ (ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต)';
             console.error(error);
         }
     };
@@ -70,16 +73,25 @@
         const container = document.getElementById('recordsContainer');
         container.innerHTML = '';
 
-        if(records.length === 0) {
-            container.innerHTML = '<div style="text-align:center;">ไม่มีข้อมูล</div>';
+        // ข้ามแถวที่ว่างเปล่า หรือแถวที่ไม่มีข้อมูลร้านค้า
+        const validRecords = records.filter(record => record.shop && record.shop.trim() !== '');
+
+        if(validRecords.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color: #6b7280; margin-top: 20px;">ไม่มีข้อมูลรอตรวจสอบ</div>';
             return;
         }
 
-        records.forEach(record => {
-            // เช็คว่าตรวจหรือยัง
+        validRecords.forEach(record => {
             const isApproved = record.inspector && record.inspector.trim() !== '';
             
-            // แปลงรูปแบบวันที่ให้อ่านง่าย
+            // แปลงรูปแบบวันที่ประทับเวลา (Timestamp) ให้อ่านง่าย
+            let timeStr = record.timestamp;
+            try {
+                const t = new Date(record.timestamp);
+                if(!isNaN(t)) timeStr = t.toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.';
+            } catch(e) {}
+
+            // แปลงรูปแบบวันที่ลงมือทำความสะอาด ให้อ่านง่าย
             let dateStr = record.date;
             try {
                 const d = new Date(record.date);
@@ -88,7 +100,7 @@
 
             let actionHtml = '';
             if(isApproved) {
-                actionHtml = `<div class="approved-text">✅ ตรวจสอบแล้วโดย: ${record.inspector}</div>`;
+                actionHtml = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${record.inspector}</div>`;
             } else {
                 actionHtml = `
                     <select id="select_${record.row}">
@@ -103,12 +115,14 @@
             const cardHtml = `
                 <div class="card ${isApproved ? 'approved' : ''}" id="card_${record.row}">
                     <div class="card-header">
-                        <div class="card-title">${record.shop}</div>
-                        <div class="card-date">${dateStr}</div>
+                        <div class="card-title">🏢 ${record.shop}</div>
+                        <div class="card-time">🕒 ประทับเวลา: ${timeStr}</div>
                     </div>
-                    <div class="info-row"><strong>รอบ:</strong> ${record.shift}</div>
-                    <div class="info-row"><strong>ผู้ทำความสะอาด:</strong> ${record.cleaner}</div>
-                    <a href="${record.image}" target="_blank" class="photo-btn">📸 คลิกดูรูปถ่ายหน้างาน</a>
+                    <div class="info-row"><span class="info-label">รอบการทำความสะอาด:</span> ${record.shift}</div>
+                    <div class="info-row"><span class="info-label">ลงวันที่ทำความสะอาด:</span> ${dateStr}</div>
+                    <div class="info-row"><span class="info-label">ลงชื่อผู้ทำความสะอาด:</span> ${record.cleaner}</div>
+                    
+                    <a href="${record.image}" target="_blank" class="photo-btn">📸 กดดูรูปถ่ายหน้างาน</a>
                     
                     <div class="action-area" id="actionArea_${record.row}">
                         ${actionHtml}
@@ -124,7 +138,7 @@
         const inspectorName = selectBox.value;
 
         if(!inspectorName) {
-            alert('กรุณาเลือกชื่อผู้ตรวจก่อนกดยืนยัน');
+            alert('⚠️ กรุณาเลือกชื่อผู้ตรวจก่อนกดยืนยันครับ');
             return;
         }
 
@@ -142,12 +156,12 @@
                 })
             });
             
-            // อัปเดต UI เมื่อสำเร็จ
-            document.getElementById(`actionArea_${rowNumber}`).innerHTML = `<div class="approved-text">✅ ตรวจสอบแล้วโดย: ${inspectorName}</div>`;
+            // อัปเดต UI ให้แสดงว่าตรวจแล้วทันที
+            document.getElementById(`actionArea_${rowNumber}`).innerHTML = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${inspectorName}</div>`;
             document.getElementById(`card_${rowNumber}`).classList.add('approved');
             
         } catch (error) {
-            alert('❌ เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้');
+            alert('❌ เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
             btn.innerText = 'บันทึกรับทราบ';
             btn.disabled = false;
         }
