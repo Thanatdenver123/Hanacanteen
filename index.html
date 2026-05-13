@@ -1,69 +1,10 @@
-<?php
-$message = '';
-
-// ตรวจสอบว่ามีการกดปุ่ม Submit ฟอร์มเข้ามาหรือไม่
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // 🔴 ใส่ URL ของ Google Apps Script (Web App) ที่นี่
-    $webAppUrl = 'https://script.google.com/macros/s/AKfycbzDFJea1nQT2xDkpRgW2BeGTgq2e5xippBD4x6IYapR2YrUOzmO5fqXRq9JVIClK57G/exec'; 
-
-    // รับค่าจากฟอร์ม
-    $shop = $_POST['shop'];
-    $shift = $_POST['shift'];
-    $date = $_POST['date'];
-    $cleaner = $_POST['cleaner'];
-    $inspector = $_POST['inspector'];
-
-    // จัดการไฟล์รูปภาพ
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
-        $imageTmpPath = $_FILES['photo']['tmp_name'];
-        $imageType = $_FILES['photo']['type'];
-        
-        // แปลงรูปภาพเป็น Base64 ด้วย PHP
-        $imageData = base64_encode(file_get_contents($imageTmpPath));
-        $base64Image = 'data:' . $imageType . ';base64,' . $imageData;
-
-        // เตรียมข้อมูล JSON เพื่อส่งไปให้ Google Apps Script
-        $payload = json_encode(array(
-            "shop" => $shop,
-            "shift" => $shift,
-            "date" => $date,
-            "cleaner" => $cleaner,
-            "inspector" => $inspector,
-            "image" => $base64Image
-        ));
-
-        // ส่งข้อมูลด้วย cURL
-        $ch = curl_init($webAppUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        // จำเป็นต้องเปิด Follow Location เพราะ Google Apps Script มีการ Redirect
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); 
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        // ตรวจสอบผลลัพธ์
-        if ($httpCode == 200 || $response) {
-            $message = '<div class="alert alert-success">✅ บันทึกข้อมูลและอัปโหลดรูปภาพเรียบร้อยแล้ว!</div>';
-        } else {
-            $message = '<div class="alert alert-error">❌ เกิดข้อผิดพลาดในการเชื่อมต่อ Google Script</div>';
-        }
-    } else {
-        $message = '<div class="alert alert-error">❌ กรุณาแนบรูปภาพ หรือไฟล์มีขนาดใหญ่เกินไป</div>';
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการทำความสะอาดบ่อน้ำเสีย</title>
+    <!-- โหลดฟอนต์ Prompt จาก Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -72,8 +13,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             --bg-color: #f3f4f6;
             --form-bg: #ffffff;
             --text-main: #1f2937;
+            --text-muted: #4b5563;
             --border-color: #d1d5db;
         }
+
         body { 
             font-family: 'Prompt', sans-serif; 
             background-color: var(--bg-color); 
@@ -84,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             min-height: 100vh;
         }
+
         .container { 
             width: 100%;
             max-width: 480px; 
@@ -92,6 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border-radius: 16px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
         }
+
         .header-title { 
             text-align: center; 
             color: var(--primary-color); 
@@ -100,7 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 600;
             font-size: 24px;
         }
-        .form-group { margin-bottom: 18px; }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
         label { 
             display: block; 
             margin-bottom: 6px; 
@@ -108,6 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: var(--text-main); 
             font-size: 14px;
         }
+
         select, input[type="text"], input[type="date"], input[type="file"] {
             width: 100%; 
             padding: 12px 14px; 
@@ -116,13 +66,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-sizing: border-box; 
             font-size: 15px;
             font-family: 'Prompt', sans-serif;
+            transition: all 0.3s ease;
             background-color: #f9fafb;
         }
+
         select:focus, input[type="text"]:focus, input[type="date"]:focus {
             outline: none;
             border-color: var(--primary-color);
             background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
+
+        /* ตกแต่งส่วนอัปโหลดไฟล์ */
+        input[type="file"] {
+            padding: 10px;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+
         .image-preview-container {
             margin-top: 10px;
             width: 100%;
@@ -131,12 +92,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: none; 
             border: 1px solid var(--border-color);
         }
+
         .image-preview-container img {
             width: 100%;
             height: auto;
             display: block;
             object-fit: cover;
         }
+
         button {
             width: 100%; 
             padding: 14px; 
@@ -149,33 +112,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 600; 
             font-family: 'Prompt', sans-serif;
             cursor: pointer; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
-        button:hover { background-color: var(--primary-hover); }
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
+
+        button:hover { 
+            background-color: var(--primary-hover); 
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
         }
-        .alert-success { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
-        .alert-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+
+        button:disabled { 
+            background-color: #93c5fd; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2 class="header-title">บันทึกทำความสะอาดบ่อน้ำเสีย</h2>
-    
-    <!-- แสดงข้อความเมื่อบันทึกสำเร็จหรือผิดพลาด -->
-    <?php echo $message; ?>
-
-    <!-- ฟอร์มส่งไปที่หน้าตัวเองแบบ POST และอนุญาตให้ส่งไฟล์ (enctype) -->
-    <form method="POST" action="" enctype="multipart/form-data" onsubmit="return validateForm()">
+    <form id="cleanForm">
         
         <div class="form-group">
             <label>1. ร้านอาหาร</label>
-            <select name="shop" required>
+            <select id="shop" required>
                 <option value="">-- เลือกร้านค้า --</option>
                 <option value="ร้านที่ 1">ร้านที่ 1</option>
                 <option value="ร้านที่ 2">ร้านที่ 2</option>
@@ -187,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
             <label>2. รอบการทำความสะอาด</label>
-            <select name="shift" required>
+            <select id="shift" required>
                 <option value="">-- เลือกรอบ --</option>
                 <option value="รอบเช้า (ก่อน 11:00 น.)">รอบเช้า (ก่อน 11:00 น.)</option>
                 <option value="รอบบ่าย (ก่อน 14.00 น.)">รอบบ่าย (ก่อน 14.00 น.)</option>
@@ -196,17 +159,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
             <label>3. ลงวันที่ทำความสะอาด</label>
-            <input type="date" name="date" id="dateInput" required>
+            <input type="date" id="date" required>
         </div>
 
         <div class="form-group">
             <label>4. ลงชื่อผู้ทำความสะอาด</label>
-            <input type="text" name="cleaner" placeholder="กรอกชื่อ - นามสกุล" required>
+            <input type="text" id="cleaner" placeholder="กรอกชื่อ - นามสกุล" required>
         </div>
 
         <div class="form-group">
             <label>5. ลงชื่อผู้ตรวจ</label>
-            <select name="inspector" required>
+            <select id="inspector" required>
                 <option value="">-- เลือกผู้ตรวจ --</option>
                 <option value="Jantima S.">Jantima S.</option>
                 <option value="Thanat Y.">Thanat Y.</option>
@@ -215,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
             <label>6. แนบรูปถ่ายหน้างาน (ไม่เกิน 5MB)</label>
-            <input type="file" name="photo" id="photo" accept="image/*" capture="environment" required>
+            <input type="file" id="photo" accept="image/*" capture="environment" required>
             
             <div class="image-preview-container" id="previewContainer">
                 <img id="imagePreview" src="" alt="ภาพตัวอย่าง">
@@ -227,16 +190,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
-    // ตั้งค่าเริ่มต้นของวันที่
-    if(!document.getElementById('dateInput').value) {
-        document.getElementById('dateInput').valueAsDate = new Date();
-    }
+    // URL ของ Web App ถูกใส่เรียบร้อยแล้ว
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzDFJea1nQT2xDkpRgW2BeGTgq2e5xippBD4x6IYapR2YrUOzmO5fqXRq9JVIClK57G/exec';
 
-    // ระบบแสดงภาพตัวอย่างก่อนส่ง
+    const form = document.getElementById('cleanForm');
     const photoInput = document.getElementById('photo');
     const previewContainer = document.getElementById('previewContainer');
     const imagePreview = document.getElementById('imagePreview');
+    
+    // เซ็ตค่าเริ่มต้นของวันที่เป็นวันปัจจุบัน
+    document.getElementById('date').valueAsDate = new Date();
 
+    // ระบบแสดงภาพตัวอย่างก่อนส่ง
     photoInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
@@ -251,18 +216,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     });
 
-    // เช็คขนาดไฟล์ก่อนให้ PHP ทำงาน
-    function validateForm() {
-        const file = photoInput.files[0];
-        if (file && file.size > 5242880) { // 5MB
-            alert('❌ ขนาดไฟล์รูปภาพใหญ่เกินไป (กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB)');
-            return false;
-        }
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
         const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerText = '⏳ กำลังอัปโหลด...';
-        return true;
-    }
+        submitBtn.innerText = '⏳ กำลังอัปโหลดและบันทึกข้อมูล...';
+        submitBtn.disabled = true;
+
+        const fileInput = document.getElementById('photo');
+        const file = fileInput.files[0];
+        
+        if (file.size > 5242880) { // แจ้งเตือนถ้ารูปใหญ่เกิน 5MB
+            alert('❌ ขนาดไฟล์รูปภาพใหญ่เกินไป (กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB)');
+            submitBtn.innerText = 'บันทึกข้อมูล';
+            submitBtn.disabled = false;
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64Image = reader.result;
+            
+            const payload = {
+                shop: document.getElementById('shop').value,
+                shift: document.getElementById('shift').value,
+                date: document.getElementById('date').value,
+                cleaner: document.getElementById('cleaner').value,
+                inspector: document.getElementById('inspector').value,
+                image: base64Image
+            };
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                alert('✅ บันทึกข้อมูลและอัปโหลดรูปภาพเรียบร้อยแล้ว!');
+                
+                // รีเซ็ตฟอร์ม
+                form.reset();
+                document.getElementById('date').valueAsDate = new Date(); 
+                previewContainer.style.display = 'none'; 
+                
+            } catch (err) {
+                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                console.error(err);
+            } finally {
+                submitBtn.innerText = 'บันทึกข้อมูล';
+                submitBtn.disabled = false;
+            }
+        };
+        
+        reader.readAsDataURL(file);
+    });
 </script>
 
 </body>
