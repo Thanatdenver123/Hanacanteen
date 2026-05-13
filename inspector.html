@@ -9,18 +9,11 @@
         :root { --primary-color: #2563eb; --success-color: #10b981; --bg-color: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; }
         body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-main); }
         
-        .header { max-width: 1000px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
+        .header { max-width: 1000px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .header h2 { color: var(--primary-color); margin: 0; }
         .back-link { display: inline-block; color: var(--text-main); text-decoration: none; background: #e5e7eb; padding: 8px 16px; border-radius: 8px; font-weight: 500;}
         .back-link:hover { background: #d1d5db; }
         
-        /* สไตล์ปุ่มแจ้งเตือน */
-        .notify-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #6366f1; max-width: 1000px; margin-left: auto; margin-right: auto;}
-        .notify-info { font-size: 14px; color: #4b5563; }
-        .notify-info strong { color: #1f2937; font-size: 16px;}
-        .btn-toggle-notify { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 8px; font-family: 'Prompt'; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-toggle-notify.active { background: #ef4444; }
-
         .layout-container { max-width: 1000px; margin: auto; display: flex; gap: 25px; align-items: flex-start; }
         
         .sidebar { width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 20px; flex-shrink: 0; }
@@ -28,17 +21,18 @@
         .calendar-input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Prompt'; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; cursor: pointer; }
         .btn-filter-clear { width: 100%; padding: 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Prompt'; cursor: pointer; transition: 0.2s; font-weight: 500;}
         .btn-filter-clear:hover { background: #e5e7eb; }
+        
+        .auto-refresh-badge { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; padding: 10px; background: #eff6ff; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 500;}
+        .dot { width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .main-content { flex-grow: 1; min-width: 0; }
         #loading { text-align: center; margin-top: 50px; color: #6b7280; font-size: 16px; }
         .grid-container { display: grid; grid-template-columns: 1fr; gap: 20px; }
         
-        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #fbbf24; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #fbbf24; transition: all 0.3s; }
         .card.approved { border-left-color: var(--success-color); opacity: 0.85; }
-        .card.new-alert { animation: pulse 2s infinite; }
         
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
-
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
         .card-title { font-weight: 600; font-size: 18px; color: var(--primary-color); }
         .card-time { color: #6b7280; font-size: 13px; background: #f3f4f6; padding: 4px 8px; border-radius: 4px; }
@@ -47,7 +41,7 @@
         .info-label { font-weight: 500; color: #4b5563; display: inline-block; width: 160px; }
         
         .photo-btn { display: inline-block; margin-top: 15px; padding: 8px 16px; background-color: #f3f4f6; color: var(--text-main); border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; font-size: 14px; transition: 0.2s; font-weight: 500; }
-        .photo-btn:hover { background: #e5e7eb; }
+        .photo-btn:hover { background-color: #e5e7eb; }
         
         .action-area { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .action-area select { padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; font-family: 'Prompt'; flex-grow: 1; max-width: 250px; font-size: 14px; }
@@ -59,20 +53,15 @@
         @media (max-width: 768px) {
             .layout-container { flex-direction: column; }
             .sidebar { width: 100%; position: static; box-sizing: border-box; }
-            .notify-box { flex-direction: column; text-align: center; gap: 15px;}
         }
     </style>
 </head>
 <body>
 
-
-
 <div class="header">
     <h2>รายการรอตรวจสอบ</h2>
     <a href="index.html" class="back-link">⬅ กลับหน้าลงบันทึก</a>
 </div>
-
-
 
 <div class="layout-container">
     <div class="sidebar">
@@ -81,6 +70,11 @@
         <input type="date" id="dateFilter" class="calendar-input" onchange="filterData()">
         <button class="btn-filter-clear" onclick="clearFilter()">โชว์ข้อมูลทั้งหมด</button>
         <div id="filterStatus" style="margin-top: 15px; font-size: 14px; font-weight: 500; color: var(--primary-color); text-align: center;"></div>
+        
+        <!-- แถบแสดงสถานะ Auto Refresh -->
+        <div class="auto-refresh-badge">
+            <div class="dot"></div> ระบบอัปเดตข้อมูลอัตโนมัติ
+        </div>
     </div>
 
     <div class="main-content">
@@ -93,13 +87,16 @@
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzDFJea1nQT2xDkpRgW2BeGTgq2e5xippBD4x6IYapR2YrUOzmO5fqXRq9JVIClK57G/exec';
     
     let allRecords = []; 
-    let latestTimestamp = null; // เก็บเวลาของข้อมูลล่าสุด
-    let isNotifyEnabled = false;
-    let notifyInterval;
 
-    window.onload = () => { fetchData(true); };
+    // โหลดครั้งแรกเมื่อเปิดหน้า
+    window.onload = () => {
+        fetchData();
+        // ตั้งเวลาให้ดึงข้อมูลใหม่แบบเงียบๆ ทุกๆ 30 วินาที
+        setInterval(fetchDataSilent, 30000); 
+    };
 
-    async function fetchData(isFirstLoad = false) {
+    // ฟังก์ชันดึงข้อมูลครั้งแรก (มีโชว์ Loading)
+    async function fetchData() {
         try {
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
@@ -107,79 +104,40 @@
             });
             const result = await response.json();
             allRecords = result.data.filter(record => record.shop && record.shop.trim() !== '');
-            
-            // เช็คข้อมูลใหม่เมื่อไม่ได้เปิด Filter วันที่อยู่
-            if (!document.getElementById('dateFilter').value) {
-                renderRecords(allRecords);
-            }
-
-            // ระบบแจ้งเตือน
-            if (allRecords.length > 0) {
-                const currentLatest = allRecords[0].timestamp; // ข้อมูลล่าสุดอยู่บนสุด
-                
-                if (!isFirstLoad && latestTimestamp && currentLatest !== latestTimestamp) {
-                    // มีข้อมูลใหม่!
-                    triggerNotification(allRecords[0]);
-                }
-                latestTimestamp = currentLatest;
-            }
-            
             document.getElementById('loading').style.display = 'none';
+            renderRecords(allRecords);
         } catch (error) {
-            console.error('Fetch Error:', error);
+            document.getElementById('loading').innerText = '❌ ไม่สามารถโหลดข้อมูลได้';
+            console.error(error);
         }
     }
 
-    // --- ระบบแจ้งเตือนอัตโนมัติ ---
-    function toggleNotification() {
-        const btn = document.getElementById('toggleNotifyBtn');
-        const statusText = document.getElementById('notifyStatusText');
-        const alertSound = document.getElementById('alertSound');
-
-        if (!isNotifyEnabled) {
-            // ขออนุญาตส่ง Notification ในเบราว์เซอร์
-            if (Notification.permission !== "granted") {
-                Notification.requestPermission();
-            }
-
-            // เล่นเสียง 1 ครั้งให้ระบบ Browser ยอมรับการเล่นเสียง (Policy)
-            alertSound.volume = 0;
-            alertSound.play().then(() => {
-                alertSound.pause();
-                alertSound.volume = 1;
-            }).catch(e => console.log(e));
-
-            isNotifyEnabled = true;
-            btn.innerText = "หยุดแจ้งเตือน";
-            btn.classList.add('active');
-            statusText.innerText = "🟢 กำลังทำงาน (ระบบจะดึงข้อมูลและแจ้งเตือนทุกๆ 1 นาที)";
-            
-            // สั่งดึงข้อมูลทุกๆ 60 วินาที
-            notifyInterval = setInterval(() => fetchData(false), 60000);
-        } else {
-            isNotifyEnabled = false;
-            btn.innerText = "เริ่มระบบแจ้งเตือน";
-            btn.classList.remove('active');
-            statusText.innerText = "ปิดอยู่ (กดปุ่มเพื่อเปิดให้ระบบเช็คข้อมูลและร้องเตือนอัตโนมัติ)";
-            clearInterval(notifyInterval);
-        }
-    }
-
-    function triggerNotification(record) {
-        // เล่นเสียง
-        const alertSound = document.getElementById('alertSound');
-        alertSound.currentTime = 0;
-        alertSound.play();
-
-        // แสดง Popup ของ OS
-        if (Notification.permission === "granted") {
-            new Notification("มีรายงานทำความสะอาดใหม่!", {
-                body: `ร้าน: ${record.shop} | รอบ: ${record.shift}`,
-                icon: "https://cdn-icons-png.flaticon.com/512/1827/1827370.png"
+    // ฟังก์ชันดึงข้อมูลเบื้องหลัง (Auto Refresh)
+    async function fetchDataSilent() {
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'get_records' })
             });
+            const result = await response.json();
+            const newRecords = result.data.filter(record => record.shop && record.shop.trim() !== '');
+            
+            // ตรวจสอบว่ามีข้อมูลเพิ่มหรืออัปเดตหรือไม่ ถ้ามีถึงจะวาดหน้าจอใหม่
+            if (JSON.stringify(allRecords) !== JSON.stringify(newRecords)) {
+                allRecords = newRecords;
+                
+                // เช็คว่าผู้ใช้อยู่ในโหมดเลือกปฏิทินหรือไม่
+                const selectedDate = document.getElementById('dateFilter').value;
+                if (selectedDate) {
+                    filterData(); // อัปเดตข้อมูลแต่อยู่ในฟิลเตอร์เดิม
+                } else {
+                    renderRecords(allRecords); // อัปเดตข้อมูลหน้าหลัก
+                }
+            }
+        } catch (error) {
+            console.error('Auto-refresh background sync failed:', error);
         }
     }
-    // ----------------------------
 
     function filterData() {
         const selectedDate = document.getElementById('dateFilter').value; 
@@ -211,7 +169,7 @@
         container.innerHTML = '';
 
         if(records.length === 0) {
-            container.innerHTML = '<div style="text-align:center; background: white; padding: 30px; border-radius: 12px; color: #6b7280;">ไม่มีข้อมูล</div>';
+            container.innerHTML = '<div style="text-align:center; background: white; padding: 30px; border-radius: 12px; color: #6b7280;">ไม่มีข้อมูลสำหรับวันที่เลือก</div>';
             return;
         }
 
@@ -224,9 +182,19 @@
             let dateStr = record.date;
             try { dateStr = new Date(record.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); } catch(e) {}
 
-            let actionHtml = isApproved 
-                ? `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${record.inspector}</div>`
-                : `<select id="select_${record.row}"><option value="">-- เลือกชื่อผู้ตรวจ --</option><option value="Jantima S.">Jantima S.</option><option value="Thanat Y.">Thanat Y.</option></select><button class="approve-btn" onclick="approveRecord(${record.row})">บันทึกรับทราบ</button>`;
+            let actionHtml = '';
+            if(isApproved) {
+                actionHtml = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${record.inspector}</div>`;
+            } else {
+                actionHtml = `
+                    <select id="select_${record.row}">
+                        <option value="">-- เลือกชื่อผู้ตรวจ --</option>
+                        <option value="Jantima S.">Jantima S.</option>
+                        <option value="Thanat Y.">Thanat Y.</option>
+                    </select>
+                    <button class="approve-btn" onclick="approveRecord(${record.row})">บันทึกรับทราบ</button>
+                `;
+            }
 
             const cardHtml = `
                 <div class="card ${isApproved ? 'approved' : ''}" id="card_${record.row}">
@@ -234,11 +202,15 @@
                         <div class="card-title">🏢 ${record.shop}</div>
                         <div class="card-time">🕒 ประทับเวลา: ${timeStr}</div>
                     </div>
-                    <div class="info-row"><span class="info-label">รอบทำความสะอาด:</span> ${record.shift}</div>
-                    <div class="info-row"><span class="info-label">วันที่ทำความสะอาด:</span> ${dateStr}</div>
-                    <div class="info-row"><span class="info-label">ผู้ทำความสะอาด:</span> ${record.cleaner}</div>
+                    <div class="info-row"><span class="info-label">รอบการทำความสะอาด:</span> ${record.shift}</div>
+                    <div class="info-row"><span class="info-label">ลงวันที่ทำความสะอาด:</span> ${dateStr}</div>
+                    <div class="info-row"><span class="info-label">ลงชื่อผู้ทำความสะอาด:</span> ${record.cleaner}</div>
+                    
                     <a href="${record.image}" target="_blank" class="photo-btn">📸 กดดูรูปถ่ายหน้างาน</a>
-                    <div class="action-area" id="actionArea_${record.row}">${actionHtml}</div>
+                    
+                    <div class="action-area" id="actionArea_${record.row}">
+                        ${actionHtml}
+                    </div>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', cardHtml);
@@ -247,21 +219,35 @@
 
     async function approveRecord(rowNumber) {
         const selectBox = document.getElementById(`select_${rowNumber}`);
-        if(!selectBox.value) return alert('⚠️ กรุณาเลือกชื่อผู้ตรวจก่อนกดยืนยันครับ');
+        const inspectorName = selectBox.value;
+
+        if(!inspectorName) {
+            alert('⚠️ กรุณาเลือกชื่อผู้ตรวจก่อนกดยืนยันครับ');
+            return;
+        }
 
         const btn = selectBox.nextElementSibling;
         btn.innerText = 'กำลังบันทึก...';
         btn.disabled = true;
 
         try {
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update_inspector', row: rowNumber, inspector: selectBox.value }) });
-            document.getElementById(`actionArea_${rowNumber}`).innerHTML = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${selectBox.value}</div>`;
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'update_inspector',
+                    row: rowNumber,
+                    inspector: inspectorName
+                })
+            });
+            
+            document.getElementById(`actionArea_${rowNumber}`).innerHTML = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${inspectorName}</div>`;
             document.getElementById(`card_${rowNumber}`).classList.add('approved');
             
             const recordIndex = allRecords.findIndex(r => r.row === rowNumber);
-            if(recordIndex !== -1) allRecords[recordIndex].inspector = selectBox.value;
+            if(recordIndex !== -1) allRecords[recordIndex].inspector = inspectorName;
+            
         } catch (error) {
-            alert('❌ เกิดข้อผิดพลาด');
+            alert('❌ เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
             btn.innerText = 'บันทึกรับทราบ';
             btn.disabled = false;
         }
