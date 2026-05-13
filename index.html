@@ -4,130 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการทำความสะอาดบ่อน้ำเสีย</title>
-    <!-- โหลดฟอนต์ Prompt จาก Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f3f4f6;
-            --form-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #4b5563;
-            --border-color: #d1d5db;
-        }
-
-        body { 
-            font-family: 'Prompt', sans-serif; 
-            background-color: var(--bg-color); 
-            margin: 0; 
-            padding: 20px; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container { 
-            width: 100%;
-            max-width: 480px; 
-            background: var(--form-bg); 
-            padding: 30px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-        }
-
-        .header-title { 
-            text-align: center; 
-            color: var(--primary-color); 
-            margin-top: 0;
-            margin-bottom: 25px; 
-            font-weight: 600;
-            font-size: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        label { 
-            display: block; 
-            margin-bottom: 6px; 
-            font-weight: 500; 
-            color: var(--text-main); 
-            font-size: 14px;
-        }
-
-        select, input[type="text"], input[type="date"], input[type="file"] {
-            width: 100%; 
-            padding: 12px 14px; 
-            border: 1.5px solid var(--border-color); 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 15px;
-            font-family: 'Prompt', sans-serif;
-            transition: all 0.3s ease;
-            background-color: #f9fafb;
-        }
-
-        select:focus, input[type="text"]:focus, input[type="date"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        /* ตกแต่งส่วนอัปโหลดไฟล์ */
-        input[type="file"] {
-            padding: 10px;
-            background-color: #ffffff;
-            cursor: pointer;
-        }
-
-        .image-preview-container {
-            margin-top: 10px;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            display: none; 
-            border: 1px solid var(--border-color);
-        }
-
-        .image-preview-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
-
-        button {
-            width: 100%; 
-            padding: 14px; 
-            margin-top: 15px; 
-            background-color: var(--primary-color); 
-            color: white; 
-            border: none; 
-            border-radius: 8px;
-            font-size: 16px; 
-            font-weight: 600; 
-            font-family: 'Prompt', sans-serif;
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-        }
-
-        button:hover { 
-            background-color: var(--primary-hover); 
-            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
-            transform: translateY(-1px);
-        }
-
-        button:disabled { 
-            background-color: #93c5fd; 
-            cursor: not-allowed; 
-            box-shadow: none;
-            transform: none;
-        }
+        /* CSS เดิม */
+        :root { --primary-color: #2563eb; --primary-hover: #1d4ed8; --bg-color: #f3f4f6; --form-bg: #ffffff; --text-main: #1f2937; --border-color: #d1d5db; }
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column;}
+        .container { width: 100%; max-width: 480px; background: var(--form-bg); padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header-title { text-align: center; color: var(--primary-color); margin-top: 0; margin-bottom: 25px; font-weight: 600; font-size: 24px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-main); font-size: 14px; }
+        select, input[type="text"], input[type="date"], input[type="file"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 15px; font-family: 'Prompt', sans-serif; background-color: #f9fafb; }
+        select:focus, input[type="text"]:focus, input[type="date"]:focus { outline: none; border-color: var(--primary-color); background-color: #ffffff; }
+        .image-preview-container { margin-top: 10px; width: 100%; border-radius: 8px; overflow: hidden; display: none; border: 1px solid var(--border-color); }
+        .image-preview-container img { width: 100%; height: auto; display: block; object-fit: cover; }
+        button { width: 100%; padding: 14px; margin-top: 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Prompt', sans-serif; cursor: pointer; transition: all 0.3s; }
+        button:hover { background-color: var(--primary-hover); }
+        button:disabled { background-color: #93c5fd; cursor: not-allowed; }
+        .admin-link { margin-top: 20px; text-align: center; }
+        .admin-link a { color: var(--text-muted); text-decoration: none; font-size: 14px; }
+        .admin-link a:hover { color: var(--primary-color); text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -168,16 +63,7 @@
         </div>
 
         <div class="form-group">
-            <label>5. ลงชื่อผู้ตรวจ</label>
-            <select id="inspector" required>
-                <option value="">-- เลือกผู้ตรวจ --</option>
-                <option value="Jantima S.">Jantima S.</option>
-                <option value="Thanat Y.">Thanat Y.</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>6. แนบรูปถ่ายหน้างาน (ไม่เกิน 5MB)</label>
+            <label>5. แนบรูปถ่ายหน้างาน (ไม่เกิน 5MB)</label>
             <input type="file" id="photo" accept="image/*" capture="environment" required>
             
             <div class="image-preview-container" id="previewContainer">
@@ -189,8 +75,12 @@
     </form>
 </div>
 
+<!-- ลิงก์สำหรับไปหน้าผู้ตรวจ -->
+<div class="admin-link">
+    <a href="inspector.html">🔒 สำหรับผู้ตรวจสอบ (Inspector)</a>
+</div>
+
 <script>
-    // URL ของ Web App ถูกใส่เรียบร้อยแล้ว
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzDFJea1nQT2xDkpRgW2BeGTgq2e5xippBD4x6IYapR2YrUOzmO5fqXRq9JVIClK57G/exec';
 
     const form = document.getElementById('cleanForm');
@@ -198,10 +88,8 @@
     const previewContainer = document.getElementById('previewContainer');
     const imagePreview = document.getElementById('imagePreview');
     
-    // เซ็ตค่าเริ่มต้นของวันที่เป็นวันปัจจุบัน
     document.getElementById('date').valueAsDate = new Date();
 
-    // ระบบแสดงภาพตัวอย่างก่อนส่ง
     photoInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
@@ -226,7 +114,7 @@
         const fileInput = document.getElementById('photo');
         const file = fileInput.files[0];
         
-        if (file.size > 5242880) { // แจ้งเตือนถ้ารูปใหญ่เกิน 5MB
+        if (file.size > 5242880) { 
             alert('❌ ขนาดไฟล์รูปภาพใหญ่เกินไป (กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB)');
             submitBtn.innerText = 'บันทึกข้อมูล';
             submitBtn.disabled = false;
@@ -238,29 +126,27 @@
             const base64Image = reader.result;
             
             const payload = {
+                action: 'insert', // แจ้งหลังบ้านว่านี่คือการเพิ่มข้อมูลใหม่
                 shop: document.getElementById('shop').value,
                 shift: document.getElementById('shift').value,
                 date: document.getElementById('date').value,
                 cleaner: document.getElementById('cleaner').value,
-                inspector: document.getElementById('inspector').value,
                 image: base64Image
             };
 
             try {
-                const response = await fetch(WEB_APP_URL, {
+                await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
                 
                 alert('✅ บันทึกข้อมูลและอัปโหลดรูปภาพเรียบร้อยแล้ว!');
-                
-                // รีเซ็ตฟอร์ม
                 form.reset();
                 document.getElementById('date').valueAsDate = new Date(); 
                 previewContainer.style.display = 'none'; 
                 
             } catch (err) {
-                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
                 console.error(err);
             } finally {
                 submitBtn.innerText = 'บันทึกข้อมูล';
@@ -271,6 +157,5 @@
         reader.readAsDataURL(file);
     });
 </script>
-
 </body>
 </html>
