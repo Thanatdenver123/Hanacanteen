@@ -19,7 +19,7 @@
         .sidebar { width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 20px; flex-shrink: 0; }
         .sidebar h3 { margin-top: 0; color: var(--primary-color); font-size: 18px; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }
         .calendar-input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Prompt'; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; cursor: pointer; }
-        .btn-filter-clear { width: 100%; padding: 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Prompt'; cursor: pointer; transition: 0.2s; font-weight: 500;}
+        .btn-filter-clear { width: 100%; padding: 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Prompt'; cursor: pointer; transition: 0.2s; font-weight: 500; color: var(--primary-color);}
         .btn-filter-clear:hover { background: #e5e7eb; }
         
         .auto-refresh-badge { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; padding: 10px; background: #eff6ff; border-radius: 8px; color: #1d4ed8; font-size: 13px; font-weight: 500;}
@@ -65,10 +65,12 @@
 
 <div class="layout-container">
     <div class="sidebar">
-        <h3>📅 ดูข้อมูลย้อนหลัง</h3>
-        <p style="font-size: 13px; color: #6b7280; margin-top: 0;">เลือกวันที่ในปฏิทินเพื่อดูรายการ</p>
+        <h3>📅 ปฏิทินตรวจงาน</h3>
+        <p style="font-size: 13px; color: #6b7280; margin-top: 0;">ระบบจะแสดงข้อมูลของวันปัจจุบัน หากต้องการดูข้อมูลย้อนหลังให้เลือกวันที่ด้านล่าง</p>
+        
         <input type="date" id="dateFilter" class="calendar-input" onchange="filterData()">
-        <button class="btn-filter-clear" onclick="clearFilter()">โชว์ข้อมูลทั้งหมด</button>
+        <button class="btn-filter-clear" onclick="resetToToday()">📅 กลับมาดูข้อมูลของวันนี้</button>
+        
         <div id="filterStatus" style="margin-top: 15px; font-size: 14px; font-weight: 500; color: var(--primary-color); text-align: center;"></div>
         
         <!-- แถบแสดงสถานะ Auto Refresh -->
@@ -88,14 +90,25 @@
     
     let allRecords = []; 
 
+    // ฟังก์ชันหาวันที่ปัจจุบัน Format YYYY-MM-DD
+    function getTodayString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // โหลดครั้งแรกเมื่อเปิดหน้า
     window.onload = () => {
+        // เซ็ตค่าเริ่มต้นในปฏิทินเป็น "วันนี้" อัตโนมัติ
+        document.getElementById('dateFilter').value = getTodayString();
         fetchData();
         // ตั้งเวลาให้ดึงข้อมูลใหม่แบบเงียบๆ ทุกๆ 30 วินาที
         setInterval(fetchDataSilent, 30000); 
     };
 
-    // ฟังก์ชันดึงข้อมูลครั้งแรก (มีโชว์ Loading)
+    // ฟังก์ชันดึงข้อมูลครั้งแรก
     async function fetchData() {
         try {
             const response = await fetch(WEB_APP_URL, {
@@ -105,7 +118,9 @@
             const result = await response.json();
             allRecords = result.data.filter(record => record.shop && record.shop.trim() !== '');
             document.getElementById('loading').style.display = 'none';
-            renderRecords(allRecords);
+            
+            // สั่งให้กรองข้อมูลตามวันที่ในปฏิทิน (ซึ่งถูกเซ็ตเป็นวันนี้ไว้แล้ว) ทันทีที่โหลดเสร็จ
+            filterData();
         } catch (error) {
             document.getElementById('loading').innerText = '❌ ไม่สามารถโหลดข้อมูลได้';
             console.error(error);
@@ -122,29 +137,22 @@
             const result = await response.json();
             const newRecords = result.data.filter(record => record.shop && record.shop.trim() !== '');
             
-            // ตรวจสอบว่ามีข้อมูลเพิ่มหรืออัปเดตหรือไม่ ถ้ามีถึงจะวาดหน้าจอใหม่
             if (JSON.stringify(allRecords) !== JSON.stringify(newRecords)) {
                 allRecords = newRecords;
-                
-                // เช็คว่าผู้ใช้อยู่ในโหมดเลือกปฏิทินหรือไม่
-                const selectedDate = document.getElementById('dateFilter').value;
-                if (selectedDate) {
-                    filterData(); // อัปเดตข้อมูลแต่อยู่ในฟิลเตอร์เดิม
-                } else {
-                    renderRecords(allRecords); // อัปเดตข้อมูลหน้าหลัก
-                }
+                filterData(); // วาดหน้าจอใหม่โดยยังคงใช้วันที่เดิมที่ผู้ใช้กำลังดูอยู่
             }
         } catch (error) {
             console.error('Auto-refresh background sync failed:', error);
         }
     }
 
+    // ฟังก์ชันกรองข้อมูลตามวันที่เลือก
     function filterData() {
         const selectedDate = document.getElementById('dateFilter').value; 
         const filterStatus = document.getElementById('filterStatus');
         
         if (!selectedDate) {
-            clearFilter();
+            resetToToday();
             return;
         }
 
@@ -154,14 +162,21 @@
         });
 
         const d = new Date(selectedDate);
-        filterStatus.innerText = `แสดงข้อมูลของวันที่: ${d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+        
+        // เช็คว่าวันที่กำลังดูอยู่คือ "วันนี้" หรือไม่ เพื่อแสดงข้อความสถานะให้ถูกต้อง
+        if (selectedDate === getTodayString()) {
+            filterStatus.innerHTML = `<span style="color: var(--success-color);">🟢 กำลังแสดงผลงานของวันนี้</span>`;
+        } else {
+            filterStatus.innerHTML = `📅 ข้อมูลย้อนหลัง:<br>${d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        }
+        
         renderRecords(filtered);
     }
 
-    function clearFilter() {
-        document.getElementById('dateFilter').value = '';
-        document.getElementById('filterStatus').innerText = 'กำลังแสดงข้อมูลทั้งหมด';
-        renderRecords(allRecords);
+    // ฟังก์ชันปุ่มกลับมาดูของวันนี้
+    function resetToToday() {
+        document.getElementById('dateFilter').value = getTodayString();
+        filterData();
     }
 
     function renderRecords(records) {
