@@ -97,11 +97,33 @@
         return `${year}-${month}-${day}`;
     }
 
+    // 🌟 ตัวรีดข้อมูลวันที่: ไม่ว่าจะรับข้อมูลมาแบบไหน จะแปลงให้เป็น YYYY-MM-DD แบบเป๊ะๆ
+    function normalizeDate(rawDate) {
+        if (!rawDate) return "";
+        let str = String(rawDate).trim();
+
+        // กรณีเป็นตัวหนังสือที่ติดเวลามาด้วย (เช่น 2026-05-13T17:00:00.000Z)
+        if (str.includes('T')) {
+            try {
+                const d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                }
+            } catch(e) {}
+        }
+
+        // กรณีอื่น ตัดเอาแค่ 10 ตัวแรกเท่านั้น
+        return str.substring(0, 10);
+    }
+
     function formatThaiDate(dateString) {
         if(!dateString) return "";
-        const dStr = dateString.toString().trim().substring(0, 10);
+        const dStr = normalizeDate(dateString);
         const parts = dStr.split('-');
-        if(parts.length !== 3) return dateString;
+        if(parts.length !== 3) return dStr;
         
         const year = parseInt(parts[0]) + 543;
         const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -151,7 +173,6 @@
         }
     }
 
-    // 🟢 แก้ไขฟังก์ชันกรองวันที่ให้แม่นยำขึ้น
     function filterData() {
         const selectedDate = document.getElementById('dateFilter').value; 
         const filterStatus = document.getElementById('filterStatus');
@@ -163,8 +184,8 @@
 
         const filtered = allRecords.filter(record => {
             if (!record.date) return false;
-            // ดึง 10 ตัวแรกเท่านั้น (YYYY-MM-DD) ป้องกันปัญหาช่องว่างเกิน
-            const recordDateStr = record.date.toString().trim().substring(0, 10);
+            // 🌟 นำวันที่มาผ่านตัวกรองก่อนเปรียบเทียบ
+            const recordDateStr = normalizeDate(record.date);
             return recordDateStr === selectedDate;
         });
         
