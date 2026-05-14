@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกการทำความสะอาดบ่อน้ำเสีย</title>
+    <title>บันทึกการทำความสะอาดบ่อไขมัน</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         /* CSS เดิม */
@@ -28,7 +28,7 @@
 <body>
 
 <div class="container">
-    <h2 class="header-title">บันทึกทำความสะอาดบ่อน้ำเสีย</h2>
+    <h2 class="header-title">บันทึกทำความสะอาดบ่อไขมัน</h2>
     <form id="cleanForm">
         
         <div class="form-group">
@@ -81,83 +81,110 @@
 </div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQavnvwkqhUdi8YNPclcCNp58yQrLAh50udA-PPqStM0KM4v5sF42XwLHDXF5Xeb-x/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzDFJea1nQT2xDkpRgW2BeGTgq2e5xippBD4x6IYapR2YrUOzmO5fqXRq9JVIClK57G/exec'; // ตรวจสอบให้แน่ใจว่าเป็น URL เวอร์ชันล่าสุด
+    const form = document.getElementById('myForm'); // สมมติว่า form ของคุณใช้ id="myForm" (ปรับชื่อให้ตรงกับของคุณได้ครับ)
+    const submitBtn = document.getElementById('submitBtn'); // สมมติว่าปุ่ม submit ของคุณใช้ id="submitBtn"
 
-    
-
-    const form = document.getElementById('cleanForm');
-    const photoInput = document.getElementById('photo');
-    const previewContainer = document.getElementById('previewContainer');
-    const imagePreview = document.getElementById('imagePreview');
-    
-    document.getElementById('date').valueAsDate = new Date();
-
-    photoInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
+    // 🌟 ฟังก์ชันพิเศษ: บีบอัดรูปภาพก่อนส่ง (แก้ปัญหาอัปโหลดรูปจากมือถือไม่ผ่าน)
+    function compressImage(file, maxWidth, maxHeight, quality) {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                previewContainer.style.display = 'block';
-            }
             reader.readAsDataURL(file);
-        } else {
-            previewContainer.style.display = 'none';
-        }
-    });
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    // คำนวณขนาดใหม่ให้สมส่วน
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round(height * maxWidth / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round(width * maxHeight / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // แปลงกลับเป็น Base64 แบบบีบอัดแล้ว (เป็น JPEG)
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerText = '⏳ กำลังอัปโหลดและบันทึกข้อมูล...';
-        submitBtn.disabled = true;
-
-        const fileInput = document.getElementById('photo');
-        const file = fileInput.files[0];
+        const shop = document.getElementById('shop').value; // รหัสอ้างอิงร้านอาหาร
+        const shift = document.getElementById('shift').value; // รอบทำความสะอาด
+        const date = document.getElementById('date').value; // วันที่
+        const cleaner = document.getElementById('cleaner').value; // ชื่อพนักงาน
+        const fileInput = document.getElementById('image'); // ช่องอัปโหลดรูป
         
-        if (file.size > 5242880) { 
-            alert('❌ ขนาดไฟล์รูปภาพใหญ่เกินไป (กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB)');
-            submitBtn.innerText = 'บันทึกข้อมูล';
-            submitBtn.disabled = false;
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('⚠️ กรุณาแนบรูปถ่ายหน้างานครับ');
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64Image = reader.result;
-            
+        const file = fileInput.files[0];
+        
+        // เปลี่ยนสถานะปุ่มเพื่อกันคนกดเบิ้ล
+        submitBtn.innerText = '⏳ กำลังบีบอัดรูปและบันทึกข้อมูล...';
+        submitBtn.disabled = true;
+
+        try {
+            // บีบอัดรูปให้ความกว้าง/สูง ไม่เกิน 1024px และคุณภาพ 70% (ไฟล์จะเหลือประมาณ 100-300 KB)
+            const compressedBase64 = await compressImage(file, 1024, 1024, 0.7);
+
+            // เตรียมข้อมูลส่งไปที่ Google Apps Script
             const payload = {
-                action: 'insert', // แจ้งหลังบ้านว่านี่คือการเพิ่มข้อมูลใหม่
-                shop: document.getElementById('shop').value,
-                shift: document.getElementById('shift').value,
-                date: document.getElementById('date').value,
-                cleaner: document.getElementById('cleaner').value,
-                image: base64Image
+                action: 'insert',
+                shop: shop,
+                shift: shift,
+                date: date,
+                cleaner: cleaner,
+                image: compressedBase64 
             };
 
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                
-                alert('✅ บันทึกข้อมูลและอัปโหลดรูปภาพเรียบร้อยแล้ว!');
-                form.reset();
-                document.getElementById('date').valueAsDate = new Date(); 
-                previewContainer.style.display = 'none'; 
-                
-            } catch (err) {
-                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
-                console.error(err);
-            } finally {
-                submitBtn.innerText = 'บันทึกข้อมูล';
-                submitBtn.disabled = false;
+            // ส่งข้อมูล
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                alert('✅ บันทึกข้อมูลและแนบรูปภาพเรียบร้อยแล้ว!');
+                form.reset(); // ล้างฟอร์ม
+                document.getElementById('date').valueAsDate = new Date(); // รีเซ็ตวันที่กลับมาเป็นวันนี้
+            } else {
+                alert('❌ เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ' + result.message);
             }
-        };
-        
-        reader.readAsDataURL(file);
+
+        } catch (error) {
+            alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งครับ');
+            console.error(error);
+        } finally {
+            // คืนค่าปุ่มกลับมาเหมือนเดิม
+            submitBtn.innerText = 'บันทึกข้อมูล';
+            submitBtn.disabled = false;
+        }
     });
 </script>
+
+
 </body>
 </html>
