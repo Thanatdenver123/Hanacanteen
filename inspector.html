@@ -89,7 +89,6 @@
     
     let allRecords = []; 
 
-    // ฟังก์ชันหาวันที่ปัจจุบัน Format YYYY-MM-DD
     function getTodayString() {
         const today = new Date();
         const year = today.getFullYear();
@@ -98,10 +97,10 @@
         return `${year}-${month}-${day}`;
     }
 
-    // ฟังก์ชันแปลงวันที่ YYYY-MM-DD เป็นภาษาไทย
     function formatThaiDate(dateString) {
         if(!dateString) return "";
-        const parts = dateString.split('-');
+        const dStr = dateString.toString().trim().substring(0, 10);
+        const parts = dStr.split('-');
         if(parts.length !== 3) return dateString;
         
         const year = parseInt(parts[0]) + 543;
@@ -152,6 +151,7 @@
         }
     }
 
+    // 🟢 แก้ไขฟังก์ชันกรองวันที่ให้แม่นยำขึ้น
     function filterData() {
         const selectedDate = document.getElementById('dateFilter').value; 
         const filterStatus = document.getElementById('filterStatus');
@@ -162,8 +162,10 @@
         }
 
         const filtered = allRecords.filter(record => {
-            // เปรียบเทียบ String ธรรมดา ป้องกันวันที่เลื่อน
-            return record.date === selectedDate;
+            if (!record.date) return false;
+            // ดึง 10 ตัวแรกเท่านั้น (YYYY-MM-DD) ป้องกันปัญหาช่องว่างเกิน
+            const recordDateStr = record.date.toString().trim().substring(0, 10);
+            return recordDateStr === selectedDate;
         });
         
         if (selectedDate === getTodayString()) {
@@ -192,17 +194,14 @@
         records.forEach(record => {
             const isApproved = record.inspector && record.inspector.trim() !== '';
             
-            // แปลงรูปแบบเวลา ให้อ่านง่าย
             let timeStr = record.timestamp;
             if(timeStr) {
-                // สมมติว่ารับมาเป็น "2026-05-14 10:30:00" เราตัดเอาแค่เวลามาโชว์
                 let timeParts = timeStr.split(' ');
                 if(timeParts.length > 1) {
                     timeStr = timeParts[1].substring(0, 5) + ' น.';
                 }
             }
 
-            // ใช้ฟังก์ชันภาษาไทยของเรา
             let dateStr = formatThaiDate(record.date);
 
             let actionHtml = '';
