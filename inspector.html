@@ -73,7 +73,6 @@
         
         <div id="filterStatus" style="margin-top: 15px; font-size: 14px; font-weight: 500; color: var(--primary-color); text-align: center;"></div>
         
-        <!-- แถบแสดงสถานะ Auto Refresh -->
         <div class="auto-refresh-badge">
             <div class="dot"></div> ระบบอัปเดตข้อมูลอัตโนมัติ
         </div>
@@ -99,16 +98,26 @@
         return `${year}-${month}-${day}`;
     }
 
-    // โหลดครั้งแรกเมื่อเปิดหน้า
+    // ฟังก์ชันแปลงวันที่ YYYY-MM-DD เป็นภาษาไทย
+    function formatThaiDate(dateString) {
+        if(!dateString) return "";
+        const parts = dateString.split('-');
+        if(parts.length !== 3) return dateString;
+        
+        const year = parseInt(parts[0]) + 543;
+        const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+        const month = months[parseInt(parts[1]) - 1];
+        const day = parseInt(parts[2]);
+        
+        return `${day} ${month} ${year}`;
+    }
+
     window.onload = () => {
-        // เซ็ตค่าเริ่มต้นในปฏิทินเป็น "วันนี้" อัตโนมัติ
         document.getElementById('dateFilter').value = getTodayString();
         fetchData();
-        // ตั้งเวลาให้ดึงข้อมูลใหม่แบบเงียบๆ ทุกๆ 30 วินาที
         setInterval(fetchDataSilent, 30000); 
     };
 
-    // ฟังก์ชันดึงข้อมูลครั้งแรก
     async function fetchData() {
         try {
             const response = await fetch(WEB_APP_URL, {
@@ -118,8 +127,6 @@
             const result = await response.json();
             allRecords = result.data.filter(record => record.shop && record.shop.trim() !== '');
             document.getElementById('loading').style.display = 'none';
-            
-            // สั่งให้กรองข้อมูลตามวันที่ในปฏิทิน (ซึ่งถูกเซ็ตเป็นวันนี้ไว้แล้ว) ทันทีที่โหลดเสร็จ
             filterData();
         } catch (error) {
             document.getElementById('loading').innerText = '❌ ไม่สามารถโหลดข้อมูลได้';
@@ -127,7 +134,6 @@
         }
     }
 
-    // ฟังก์ชันดึงข้อมูลเบื้องหลัง (Auto Refresh)
     async function fetchDataSilent() {
         try {
             const response = await fetch(WEB_APP_URL, {
@@ -139,14 +145,13 @@
             
             if (JSON.stringify(allRecords) !== JSON.stringify(newRecords)) {
                 allRecords = newRecords;
-                filterData(); // วาดหน้าจอใหม่โดยยังคงใช้วันที่เดิมที่ผู้ใช้กำลังดูอยู่
+                filterData(); 
             }
         } catch (error) {
             console.error('Auto-refresh background sync failed:', error);
         }
     }
 
-    // ฟังก์ชันกรองข้อมูลตามวันที่เลือก
     function filterData() {
         const selectedDate = document.getElementById('dateFilter').value; 
         const filterStatus = document.getElementById('filterStatus');
@@ -157,23 +162,19 @@
         }
 
         const filtered = allRecords.filter(record => {
-            try { return new Date(record.date).toISOString().split('T')[0] === selectedDate; } 
-            catch(e) { return false; }
+            // เปรียบเทียบ String ธรรมดา ป้องกันวันที่เลื่อน
+            return record.date === selectedDate;
         });
-
-        const d = new Date(selectedDate);
         
-        // เช็คว่าวันที่กำลังดูอยู่คือ "วันนี้" หรือไม่ เพื่อแสดงข้อความสถานะให้ถูกต้อง
         if (selectedDate === getTodayString()) {
-            filterStatus.innerHTML = `<span style="color: var(--success-color);">🟢 กำลังแสดงผลงานของวันนี้</span>`;
+            filterStatus.innerHTML = `<span style="color: var(--success-color);">🟢 กำลังแสดงผลงานของวันนี้<br>(${formatThaiDate(selectedDate)})</span>`;
         } else {
-            filterStatus.innerHTML = `📅 ข้อมูลย้อนหลัง:<br>${d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+            filterStatus.innerHTML = `📅 ข้อมูลย้อนหลัง:<br>${formatThaiDate(selectedDate)}`;
         }
         
         renderRecords(filtered);
     }
 
-    // ฟังก์ชันปุ่มกลับมาดูของวันนี้
     function resetToToday() {
         document.getElementById('dateFilter').value = getTodayString();
         filterData();
@@ -191,11 +192,18 @@
         records.forEach(record => {
             const isApproved = record.inspector && record.inspector.trim() !== '';
             
+            // แปลงรูปแบบเวลา ให้อ่านง่าย
             let timeStr = record.timestamp;
-            try { timeStr = new Date(record.timestamp).toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.'; } catch(e) {}
+            if(timeStr) {
+                // สมมติว่ารับมาเป็น "2026-05-14 10:30:00" เราตัดเอาแค่เวลามาโชว์
+                let timeParts = timeStr.split(' ');
+                if(timeParts.length > 1) {
+                    timeStr = timeParts[1].substring(0, 5) + ' น.';
+                }
+            }
 
-            let dateStr = record.date;
-            try { dateStr = new Date(record.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); } catch(e) {}
+            // ใช้ฟังก์ชันภาษาไทยของเรา
+            let dateStr = formatThaiDate(record.date);
 
             let actionHtml = '';
             if(isApproved) {
