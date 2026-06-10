@@ -40,10 +40,10 @@
         .info-row { margin-bottom: 8px; font-size: 15px; }
         .info-label { font-weight: 500; color: #4b5563; display: inline-block; width: 160px; }
         
-        .photo-preview-container { margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; background: #f9fafb; display: flex; justify-content: center; align-items: center; max-height: 350px; }
-        .photo-preview { width: 100%; height: auto; max-height: 350px; object-fit: cover; cursor: pointer; transition: 0.2s; }
-        .photo-preview:hover { transform: scale(1.02); }
-        .no-photo-text { padding: 20px; color: #9ca3af; font-size: 14px; font-style: italic; }
+        /* 🌟 สไตล์ใหม่สำหรับแสดงรูปภาพ */
+        .image-wrapper { margin-top: 15px; background: #f9fafb; padding: 10px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: center; }
+        .preview-image { width: 100%; max-height: 280px; object-fit: contain; border-radius: 6px; display: block; margin: 0 auto; }
+        .image-hint { font-size: 12px; color: #6b7280; margin-top: 8px; }
         
         .action-area { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .action-area select { padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; font-family: 'Prompt'; flex-grow: 1; max-width: 250px; font-size: 14px; }
@@ -87,7 +87,8 @@
 </div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwu02eH4zxNivslyx6OwsKKVeAu6kFmBdBfxQjUJJhuNNtN5MlRN8wEBd_rrUYj7EcboQ/exec';
+    // ⚠️ ลิงก์ Web App ตัวล่าสุดของคุณ (ตรวจสอบให้ตรงกับใน index.html นะครับ)
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwBrHLsKy_3LTglBN3ji2qeHaLSW8a7aJT7OdWPCxKTMzzOn_au9raLs_LTJIOuO0Vz/exec';
     
     let allRecords = []; 
 
@@ -99,12 +100,9 @@
         return `${year}-${month}-${day}`;
     }
 
-    // 🌟 ตัวรีดข้อมูลวันที่: ไม่ว่าจะรับข้อมูลมาแบบไหน จะแปลงให้เป็น YYYY-MM-DD แบบเป๊ะๆ
     function normalizeDate(rawDate) {
         if (!rawDate) return "";
         let str = String(rawDate).trim();
-
-        // กรณีเป็นตัวหนังสือที่ติดเวลามาด้วย (เช่น 2026-05-13T17:00:00.000Z)
         if (str.includes('T')) {
             try {
                 const d = new Date(str);
@@ -116,8 +114,6 @@
                 }
             } catch(e) {}
         }
-
-        // กรณีอื่น ตัดเอาแค่ 10 ตัวแรกเท่านั้น
         return str.substring(0, 10);
     }
 
@@ -186,7 +182,6 @@
 
         const filtered = allRecords.filter(record => {
             if (!record.date) return false;
-            // 🌟 นำวันที่มาผ่านตัวกรองก่อนเปรียบเทียบ
             const recordDateStr = normalizeDate(record.date);
             return recordDateStr === selectedDate;
         });
@@ -227,6 +222,30 @@
 
             let dateStr = formatThaiDate(record.date);
 
+            // 🌟 ระบบสกัดลิงก์ Drive และแปลงเป็นรูปภาพฝัง
+            let imageHtml = '';
+            if (record.image && record.image.trim() !== '') {
+                let embedUrl = record.image; // ลิงก์ตั้งต้น
+                // ใช้ Regex ดึง ID ออกมาจากลิงก์ Drive
+                const match = record.image.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    // แปลงเป็นลิงก์แบบ Thumbnail เพื่อให้ฝังในเว็บได้ง่ายขึ้น
+                    embedUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+                }
+
+                // สังเกต onerror: ถ้าระบบรักษาความปลอดภัยบล็อกรูป จะโหลดภาพกล่องข้อความมาแทนไอคอนแตกๆ
+                imageHtml = `
+                    <div class="image-wrapper">
+                        <div style="text-align: left; font-weight: 500; font-size: 14px; margin-bottom: 8px; color: #4b5563;">รูปถ่ายหน้างาน:</div>
+                        <a href="${record.image}" target="_blank">
+                            <img src="${embedUrl}" class="preview-image" alt="กำลังโหลดรูปภาพ..." 
+                                 onerror="this.onerror=null; this.src='https://placehold.co/600x300/f3f4f6/6b7280?text=คลิกที่นี่เพื่อเปิดดูรูปภาพหน้างาน';">
+                        </a>
+                        <div class="image-hint">👆 คลิกที่รูปเพื่อขยาย / หากรูปไม่แสดงให้คลิกเพื่อเปิดใน Drive</div>
+                    </div>
+                `;
+            }
+
             let actionHtml = '';
             if(isApproved) {
                 actionHtml = `<div class="approved-text">✅ ตรวจสอบแล้วโดย : ${record.inspector}</div>`;
@@ -238,22 +257,6 @@
                         <option value="Thanat Y.">Thanat Y.</option>
                     </select>
                     <button class="approve-btn" onclick="approveRecord(${record.row})">บันทึกรับทราบ</button>
-                `;
-            }
-
-            // จัดการกับการแสดงผลรูปถ่าย: หากไม่มีลิ้งค์รูปถ่าย หรือลิ้งค์เสีย
-            let imageHtml = '';
-            if (record.image && record.image.startsWith('http')) {
-                imageHtml = `
-                    <div class="photo-preview-container">
-                        <img src="${record.image}" alt="รูปถ่ายหน้างาน" class="photo-preview" onclick="window.open('${record.image}', '_blank')" title="คลิกเพื่อดูรูปภาพขนาดใหญ่">
-                    </div>
-                `;
-            } else {
-                imageHtml = `
-                    <div class="photo-preview-container">
-                        <div class="no-photo-text">📸 ไม่พบลิ้งค์รูปถ่าย หรือรูปภาพยังไม่ถูกอัปเดตลงเซิร์ฟเวอร์</div>
-                    </div>
                 `;
             }
 
